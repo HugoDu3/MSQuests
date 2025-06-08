@@ -48,6 +48,26 @@ public class CreateTablesMigration extends Migration {
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             )
             """);
+
+            handle.execute("""
+            CREATE TABLE IF NOT EXISTS msquests_pool_cooldown (
+                actor_id CHAR(36) NOT NULL,
+                pool_id VARCHAR(255) NOT NULL,
+                last_use TIMESTAMP NOT NULL,
+                PRIMARY KEY (actor_id, pool_id)
+            )
+            """);
+
+            handle.execute("""
+            CREATE TABLE IF NOT EXISTS msquests_chain_progress (
+                actor_id   CHAR(36)   NOT NULL,
+                chain_id   VARCHAR(255) NOT NULL,
+                current_index INT      NOT NULL,
+                PRIMARY KEY (actor_id, chain_id)
+            )
+            """);
+
+
         });
     }
 }

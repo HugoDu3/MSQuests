@@ -98,6 +98,10 @@ public class ObjectiveTypeRegistry {
         return Map.copyOf(registeredTypes);
     }
 
+    public QuestObjectiveHandler<?> getHandler(String type) {
+        return handlers.get(type);
+    }
+
     /**
      * Internal class representing an entry in the objective type registry.
      * Contains both the config class and the objective class.

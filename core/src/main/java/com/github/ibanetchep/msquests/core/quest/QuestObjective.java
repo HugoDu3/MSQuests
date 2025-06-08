@@ -6,16 +6,14 @@ import java.util.UUID;
 public abstract class QuestObjective<T extends QuestObjectiveConfig> {
 
     protected T objectiveConfig;
-
     protected UUID id;
     protected int progress;
     protected QuestObjectiveStatus status = QuestObjectiveStatus.IN_PROGRESS;
     protected Quest quest;
-
     protected Date startedAt;
     protected Date completedAt;
-    protected Date createdAt;
-    protected Date updatedAt;
+    protected Date createdAt = new Date();
+    protected Date updatedAt = new Date();
 
     public QuestObjective(UUID id, Quest quest, int progress, T objectiveDefinition) {
         this.id = id;
@@ -56,27 +54,37 @@ public abstract class QuestObjective<T extends QuestObjectiveConfig> {
         return startedAt;
     }
 
+    public void setStartedAt(Date startedAt) {
+        this.startedAt = startedAt;
+    }
+
     public Date getCompletedAt() {
         return completedAt;
+    }
+
+    public void setCompletedAt(Date completedAt) {
+        this.completedAt = completedAt;
     }
 
     public Date getCreatedAt() {
         return createdAt;
     }
 
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
+    }
     public Date getUpdatedAt() {
         return updatedAt;
+    }
+
+    public void setUpdatedAt(Date updatedAt) {
+        this.updatedAt = updatedAt;
     }
 
     public T getObjectiveConfig() {
         return objectiveConfig;
     }
 
-    public void callOnProgress() {
-        //todo call custom bukkit event
-    }
-
-    public void callOnComplete() {
-        //todo call custom bukkit event
-    }
+    public void callOnProgress() {}
+    public void callOnComplete() {}
 }

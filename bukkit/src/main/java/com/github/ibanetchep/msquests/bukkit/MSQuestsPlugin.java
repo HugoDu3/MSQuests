@@ -3,6 +3,8 @@ package com.github.ibanetchep.msquests.bukkit;
 import com.github.ibanetchep.msquests.bukkit.command.QuestAdminCommand;
 import com.github.ibanetchep.msquests.bukkit.lang.LangManager;
 import com.github.ibanetchep.msquests.bukkit.listener.PlayerJoinListener;
+import com.github.ibanetchep.msquests.bukkit.pool.QuestChainManager;
+import com.github.ibanetchep.msquests.bukkit.pool.QuestPoolManager;
 import com.github.ibanetchep.msquests.bukkit.questobjective.blockbreak.BlockBreakObjective;
 import com.github.ibanetchep.msquests.bukkit.questobjective.blockbreak.BlockBreakObjectiveConfig;
 import com.github.ibanetchep.msquests.bukkit.questobjective.blockbreak.BlockBreakObjectiveHandler;
@@ -15,6 +17,8 @@ import com.github.ibanetchep.msquests.core.registry.ObjectiveTypeRegistry;
 import com.github.ibanetchep.msquests.database.DbAccess;
 import com.github.ibanetchep.msquests.database.DbCredentials;
 import com.github.ibanetchep.msquests.database.repository.ActorSqlRepository;
+import com.github.ibanetchep.msquests.database.repository.ChainProgressSqlRepository;
+import com.github.ibanetchep.msquests.database.repository.PoolCooldownSqlRepository;
 import com.github.ibanetchep.msquests.database.repository.QuestSqlRepository;
 import com.tcoded.folialib.FoliaLib;
 import com.tcoded.folialib.impl.PlatformScheduler;
@@ -45,6 +49,9 @@ public final class MSQuestsPlugin extends JavaPlugin {
     private LangManager langManager;
     private QuestManager questManager;
 
+    private QuestPoolManager poolManager;
+    private QuestChainManager chainManager;
+
     private YamlDocument config;
     private DbAccess dbAccess;
     private FoliaLib foliaLib;
@@ -55,7 +62,7 @@ public final class MSQuestsPlugin extends JavaPlugin {
         loadDatabase();
         foliaLib = new FoliaLib(this);
 
-        this.langManager = new LangManager(this);
+        langManager = new LangManager(this);
         langManager.load();
 
         actorRegistry = new ActorTypeRegistry();
@@ -71,6 +78,11 @@ public final class MSQuestsPlugin extends JavaPlugin {
                 actorRegistry,
                 objectiveTypeRegistry
         );
+
+        poolManager = new QuestPoolManager(this, new PoolCooldownSqlRepository(dbAccess));
+        chainManager = new QuestChainManager(this, new ChainProgressSqlRepository(dbAccess));
+        poolManager.load();
+        chainManager.load();
 
         registerListeners();
         registerCommands();
@@ -102,7 +114,7 @@ public final class MSQuestsPlugin extends JavaPlugin {
     }
 
     public void loadDatabase() {
-        var dbCredentials = new DbCredentials(
+        DbCredentials dbCredentials = new DbCredentials(
                 config.getString("database.type", "mysql"),
                 config.getString("database.host"),
                 config.getString("database.user"),
@@ -113,7 +125,6 @@ public final class MSQuestsPlugin extends JavaPlugin {
         );
 
         dbAccess = new DbAccess();
-
         try {
             dbAccess.initPool(dbCredentials);
         } catch (Exception e) {
@@ -123,17 +134,14 @@ public final class MSQuestsPlugin extends JavaPlugin {
     }
 
     private void registerCommands() {
-        Lamp<BukkitCommandActor> lamp =  BukkitLamp.builder(this)
-                .build();
-
+        Lamp<BukkitCommandActor> lamp = BukkitLamp.builder(this).build();
         BukkitLampConfig.builder(this).disableBrigadier().build();
-
         lamp.register(new QuestAdminCommand(this));
     }
 
     public void registerListeners() {
-        PluginManager pluginManager = getServer().getPluginManager();
-        pluginManager.registerEvents(new PlayerJoinListener(this), this);
+        PluginManager pm = getServer().getPluginManager();
+        pm.registerEvents(new PlayerJoinListener(this), this);
     }
 
     private void registerObjectiveTypes() {
@@ -161,6 +169,14 @@ public final class MSQuestsPlugin extends JavaPlugin {
         return objectiveTypeRegistry;
     }
 
+    public QuestPoolManager getPoolManager() {
+        return poolManager;
+    }
+
+    public QuestChainManager getChainManager() {
+        return chainManager;
+    }
+
     @NotNull
     public YamlDocument getConfiguration() {
         return config;
@@ -168,5 +184,9 @@ public final class MSQuestsPlugin extends JavaPlugin {
 
     public PlatformScheduler getScheduler() {
         return foliaLib.getScheduler();
+    }
+
+    public DbAccess getDbAccess() {
+        return dbAccess;
     }
 }
